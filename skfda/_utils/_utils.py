@@ -549,7 +549,7 @@ def _int_to_real(array: Union[NDArrayInt, NDArrayFloat]) -> NDArrayFloat:
     if np.issubdtype(array.dtype, np.integer):
         return array.astype(np.float64)
 
-    assert np.issubdtype(array.dtype, np.floating)
+    assert np.issubdtype(array.dtype, np.floating) or np.issubdtype(array.dtype, np.complexfloating)
     return cast(NDArrayFloat, array)
 
 

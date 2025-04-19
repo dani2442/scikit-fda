@@ -12,11 +12,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import skfda
+from skfda.misc.metrics import LpDistance
 from skfda.representation.grid import FDataGrid
+from skfda.preprocessing.dim_reduction import F2FPCA, FF2FPCA
 
-#data_matrix = [[[1, 0.3], [2, 0.4]], [[2, 0.5], [3, 0.6]]]
-data_matrix = np.zeros((200, 100, 10))
-#grid_points = [2, 4]
-grid_points = np.linspace(0, 100, 100)
+N = 200
+n = 100
+p = 10
+data_matrix = np.random.random((n, N, p))
+grid_points = np.linspace(0,1, N)
 fd = FDataGrid(data_matrix, grid_points)
-print(fd.dim_domain, fd.dim_codomain)
+f2fpca = F2FPCA(1)
+ff2fpca = FF2FPCA(1)
+
+f2fpca = f2fpca.fit(fd)
+Z1 = f2fpca.transform(fd)
+Y1 = f2fpca.inverse_transform(Z1)
+
+ff2fpca = ff2fpca.fit(fd)
+Z2 = ff2fpca.transform(fd)
+Y2 = ff2fpca.inverse_transform(Z2)
+
+d = LpDistance(2)
+print("Reconstruction error of F2FPCA: ", np.mean(d(fd,Y1)))
+print("Reconstruction error of FF2FPCA: ", np.mean(d(fd,Y2)))

@@ -24,7 +24,7 @@ from skfda.typing._numpy import ArrayLike, NDArrayFloat
 Function = TypeVar("Function", bound=FData)
 WeightsCallable = Callable[[np.ndarray], np.ndarray]
 
-class F2FPCA:
+class FF2FPCA:
     r"""
     Functional to Functional PCA.
 
@@ -53,6 +53,7 @@ class F2FPCA:
     ) -> Function:
 
         if learn_mean:
+            
             self._mean = X.mean()
 
         return X - self._mean if self.centering else X
@@ -61,7 +62,7 @@ class F2FPCA:
         self,
         X: FDataGrid,
         y: object = None
-    ) -> F2FPCA:
+    ) -> FF2FPCA:
         """
         Compute the first n_components principal components and saves them.
 
@@ -75,6 +76,9 @@ class F2FPCA:
         """
         # data matrix initialization
         n, N, p = X.data_matrix.shape
+
+        X = X.copy()
+        X.data_matrix = np.fft.fft(X.data_matrix, axis=1)
 
         # if centering is True then subtract the mean function to each function
         # in FDataBasis
@@ -93,7 +97,7 @@ class F2FPCA:
         for i in range(1, eigenvectors.shape[0]):
             eigenvectors[i] *= np.sign(np.sum(eigenvectors[i] * eigenvectors[i - 1], axis=0, keepdims=True))
         
-        return F2FPCA(self.n_components, _mean = self._mean, _weights = eigenvectors)
+        return FF2FPCA(self.n_components, _mean = self._mean, _weights = eigenvectors)
 
     def _transform_grid(
         self,
@@ -113,6 +117,7 @@ class F2FPCA:
         """
         # in this case its the coefficient matrix multiplied by the principal
         # components as column vectors
+
         return (  # type: ignore[no-any-return]
             X.data_matrix.transpose(1,0,2) @ self._weights[:, :, :self.n_components]
         )
@@ -121,7 +126,7 @@ class F2FPCA:
         self,
         X: FData,
         y: object = None,
-    ) -> F2FPCA:
+    ) -> FF2FPCA:
         """
         Compute the n_components first principal components and saves them.
 
@@ -157,6 +162,9 @@ class F2FPCA:
             Principal component scores.
 
         """
+        X = X.copy()
+        X.data_matrix = np.fft.fft(X.data_matrix, axis=1)
+
         X = self._center_if_necessary(X, learn_mean=False)
 
         if isinstance(X, FDataGrid):
@@ -207,10 +215,13 @@ class F2FPCA:
         # Calculate the reconstruction
         result = pc_scores @  self._weights[:, :, :self.n_components].transpose(0, 2, 1)
 
+        result = result.transpose(1,0,2) + self._mean.data_matrix
+        result = np.fft.ifft(result, axis=1).real
+
         r = self._mean.copy(
-                data_matrix=result.transpose(1,0,2),
+                data_matrix=result,
                 sample_names=(None,) * pc_scores.shape[1]
-            )+ self._mean
+            )
         return r
 
 

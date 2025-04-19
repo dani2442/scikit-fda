@@ -15,6 +15,8 @@ _normal_getattr, __dir__, __all__ = lazy.attach(
         "_fdm": ["DiffusionMap"],
         "_fpca": ["FPCA"],
         "_fpls": ["FPLS"],
+        "_f2fpca": ["F2FPCA"],
+        "_ff2fpca": ["FF2FPCA"],
         "_neighbor_transforms": ["KNeighborsTransformer"],
     },
 )
@@ -26,6 +28,8 @@ if TYPE_CHECKING:
     from ._neighbor_transforms import (
         KNeighborsTransformer as KNeighborsTransformer,
     )
+    from ._f2fpca import F2FPCA as F2FPCA
+    from ._ff2fpca import FF2FPCA as FF2FPCA
 
 
 def __getattr__(name: str) -> Any:
